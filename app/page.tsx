@@ -164,7 +164,7 @@ export default function HomePage() {
               <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-muted-foreground w-5 h-5" />
               <Input
                 type="text"
-                placeholder="Search for products... (e.g., red shoes, waterproof backpack under $100)"
+                placeholder="Search for products... (e.g., black sunglasses, hat, white socks, etc.)"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-12 pr-4 py-6 text-lg rounded-full border-2 focus:border-primary transition-colors"
@@ -200,15 +200,14 @@ export default function HomePage() {
 
           {/* Example Searches - Only show when no search has been made */}
           {!hasSearched && (
-            <div className="mt-12">
+            <div className="mt-20">
               <p className="text-sm text-muted-foreground mb-4 text-center">Try searching for:</p>
               <div className="flex flex-wrap justify-center gap-2">
                 {[
                   "red shoes",
-                  "waterproof backpack under $100",
-                  "wireless headphones",
+                  "waterproof backpack",
+                  "black jacket",
                   "running sneakers",
-                  "laptop bag",
                   "blue jeans"
                 ].map((example) => (
                   <button
@@ -279,7 +278,7 @@ export default function HomePage() {
 
       {/* Stats Footer - Only show when no search has been made */}
       {!hasSearched && (
-        <footer className="p-6 text-center border-t mt-auto">
+        <footer className="fixed bottom-0 left-0 right-0 p-6 text-center border-t bg-background">
           <p className="text-sm text-muted-foreground mb-4">
             Powered by AI • 800+ products • Lightning fast search
           </p>
