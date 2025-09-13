@@ -1,4 +1,5 @@
 {
+<<<<<<< HEAD
   "name": "my-v0-project",
   "version": "0.1.0",
   "private": true,
@@ -87,4 +88,44 @@
     "tw-animate-css": "1.3.3",
     "typescript": "^5"
   }
+=======
+  "name": "dynamodb-connection",
+  "version": "1.0.0",
+  "description": "Simple DynamoDB connection and operations",
+  "main": "dynamodb-client.js",
+  "type": "module",
+  "scripts": {
+    "start": "node dynamodb-client.js",
+    "test": "node dynamodb-client.js",
+    "crawl": "node ai-shopify-crawler.js crawl",
+    "search": "node ai-shopify-crawler.js search",
+    "category": "node ai-shopify-crawler.js category",
+    "schedule": "node ai-shopify-crawler.js schedule",
+    "demo": "node demo-nrml-parser.js",
+    "create-table": "node create-table.js",
+    "mcp-server": "node mcp-product-finder.js",
+    "setup": "node create-table.js && echo 'Setup complete! Configure your .env.local file and run npm run crawl'",
+    "mass-crawl": "node mass-shopify-crawler.js",
+    "max-thread-crawl": "node max-thread-crawler.js",
+    "safe-crawl": "node rate-limit-crawler.js",
+    "optimal-crawl": "node optimal-threaded-crawler.js",
+    "dynamic-analysis": "node dynamic-ai-analyzer.js",
+    "check-products": "node check-all-products.js",
+    "test-search": "node test-gpt4-search.js",
+    "validate-products": "node test-validation.js",
+    "list-stores": "node -e \"import('./shopify-stores-list.js').then(m => console.log('Total stores:', m.getTotalStoreCount()))\""
+  },
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.668.0",
+    "@aws-sdk/lib-dynamodb": "^3.668.0",
+    "dotenv": "^16.3.1",
+    "axios": "^1.6.2",
+    "openai": "^4.20.1",
+    "node-cron": "^3.0.3",
+    "express": "^4.18.2"
+  },
+  "keywords": ["aws", "dynamodb", "nodejs"],
+  "author": "",
+  "license": "MIT"
+>>>>>>> master
 }
