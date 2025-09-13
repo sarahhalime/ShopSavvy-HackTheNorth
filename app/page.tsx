@@ -278,13 +278,8 @@ export default function HomePage() {
 
       {/* Stats Footer - Only show when no search has been made */}
       {!hasSearched && (
-        <footer className="fixed bottom-0 left-0 right-0 p-6 text-center border-t bg-background">
-          <p className="text-sm text-muted-foreground mb-4">
-            Powered by AI • 800+ products • Lightning fast search
-          </p>
-          <p className="text-sm text-muted-foreground">
-            Powered by OpenAI GPT-4 & DynamoDB • Built with Next.js
-          </p>
+        <footer className="fixed bottom-4 left-0 right-0 p-6 text-center border-t bg-background">
+          
         </footer>
       )}
     </div>
