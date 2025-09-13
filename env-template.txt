@@ -1,0 +1,15 @@
+# Copy this file to .env.local and fill in your credentials
+
+# AWS Configuration
+AWS_ACCESS_KEY_ID=your_aws_access_key_here
+AWS_SECRET_ACCESS_KEY=your_aws_secret_key_here
+AWS_DEFAULT_REGION=us-east-1
+
+# DynamoDB Configuration
+DYNAMODB_TABLE_NAME=Shopify-warehouse
+
+# OpenAI Configuration (for AI categorization)
+OPENAI_API_KEY=your_openai_api_key_here
+
+# Optional: MCP Server Configuration
+MCP_PORT=3001
