@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Search, Zap, ShoppingBag, DollarSign, Eye, MoreHorizontal } from "lucide-react"
+import { Search, Zap, ShoppingBag, Eye, MoreHorizontal } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent } from "@/components/ui/card"
@@ -108,10 +108,7 @@ export default function HomePage() {
             {product.name}
           </h3>
           <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center space-x-1">
-              <DollarSign className="w-4 h-4 text-green-600" />
-              <span className="font-bold text-green-600 text-lg">{product.price}</span>
-            </div>
+            <span className="font-bold text-green-600 text-lg">{product.price}</span>
             <Badge variant="outline" className="text-xs">
               {product.store}
             </Badge>
