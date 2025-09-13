@@ -75,7 +75,7 @@ class MCPProductFinder {
       const matchedProducts = this.applyIntelligentMatching(allProducts, queryAnalysis);
       
       // Step 4: Score and rank results
-      const rankedResults = this.scoreAndRankResults(matchedProducts, queryAnalysis);
+      const rankedResults = await this.scoreAndRankResults(matchedProducts, queryAnalysis);
       
       // Step 5: Return clean results without AI response generation
       return {
@@ -95,40 +95,52 @@ class MCPProductFinder {
 
   async analyzeUserQuery(query) {
     const prompt = `
-You are an expert e-commerce product search analyst. Analyze this customer query and extract all relevant search criteria using retail industry standards.
+You are an expert e-commerce product search analyst. Analyze this customer query and extract ALL possible search criteria and characteristics.
 
 Customer Query: "${query}"
 
-Extract and return ONLY a JSON object with the following structure:
+Extract and return ONLY a JSON object with comprehensive characteristics:
 
 {
   "intent": "what the customer is looking for",
   "product_type": "type of product they want",
   "colors": ["any colors mentioned or implied"],
-  "materials": ["any materials mentioned"],
-  "style_preferences": ["style keywords like casual, formal, vintage"],
-  "activity_use": ["intended activities like running, work, party"],
-  "size_hints": ["any size preferences mentioned"],
-  "price_hints": ["budget indicators like cheap, expensive, under $100"],
-  "brand_preferences": ["any brands mentioned"],
-  "feature_requirements": ["specific features like waterproof, comfortable"],
+  "materials": ["any materials mentioned like leather, cotton, wool, synthetic"],
+  "style_preferences": ["style keywords like casual, formal, vintage, modern, retro"],
+  "activity_use": ["intended activities like running, work, party, hiking, gym"],
+  "size_hints": ["any size preferences like small, large, XL, 10, etc"],
+  "price_hints": ["budget indicators like cheap, expensive, under $100, premium"],
+  "brand_preferences": ["any brands mentioned like Nike, Adidas, Apple"],
+  "feature_requirements": ["specific features like waterproof, comfortable, breathable"],
+  "fit_preferences": ["fit types like slim, regular, loose, tight"],
+  "season_weather": ["seasonal hints like winter, summer, rain, snow"],
+  "occasion_type": ["occasion like work, casual, formal, party, wedding"],
+  "age_gender": ["age/gender hints like mens, womens, kids, adult"],
+  "technology_features": ["tech features like wireless, bluetooth, smart"],
+  "sustainability": ["eco hints like organic, recycled, sustainable"],
+  "performance_specs": ["performance needs like speed, durability, lightweight"],
+  "design_aesthetics": ["design elements like minimalist, bold, classic"],
+  "comfort_requirements": ["comfort needs like cushioned, soft, ergonomic"],
+  "durability_needs": ["durability requirements like heavy-duty, long-lasting"],
+  "special_conditions": ["special needs like hypoallergenic, vegan, non-slip"],
   "urgency": "how urgent this request seems",
   "specificity": "how specific vs general this query is",
   "synonyms_to_consider": ["alternative terms for the main product"],
   "search_strategy": "best approach for this query"
 }
 
-Be intelligent about synonyms and implications. For example:
-- "red shoes" should include burgundy, crimson, maroon variations
-- "sneakers" should also match "shoes", "trainers", "athletic footwear"
-- "waterproof jacket" implies outdoor, rain, weather protection
+Be extremely thorough in extracting characteristics. Examples:
+- "comfortable running shoes" → comfort_requirements: ["comfortable"], activity_use: ["running"]
+- "waterproof winter boots" → feature_requirements: ["waterproof"], season_weather: ["winter"]
+- "premium leather wallet" → materials: ["leather"], price_hints: ["premium"]
+- "women's casual dress" → age_gender: ["womens"], style_preferences: ["casual"]
 `;
 
     const response = await openai.chat.completions.create({
-      model: "gpt-4",
+      model: "gpt-4-turbo",
       messages: [{ role: "user", content: prompt }],
       temperature: 0.1,
-      max_tokens: 600
+      max_tokens: 800
     });
 
     let content = response.choices[0].message.content.trim();
@@ -161,10 +173,13 @@ Be intelligent about synonyms and implications. For example:
   applyIntelligentMatching(products, analysis) {
     const matched = [];
 
+    console.log(`🔍 Filtering ${products.length} products for query analysis:`, analysis);
+
     for (const product of products) {
       const matchScore = this.calculateMatchScore(product, analysis);
       
-      if (matchScore.totalScore > 0) {
+      // STRICT: Only include products with meaningful scores (20+ points)
+      if (matchScore.totalScore >= 20) {
         matched.push({
           ...product,
           matchScore: matchScore.totalScore,
@@ -174,6 +189,7 @@ Be intelligent about synonyms and implications. For example:
       }
     }
 
+    console.log(`✅ Found ${matched.length} relevant products after filtering`);
     return matched;
   }
 
@@ -182,32 +198,34 @@ Be intelligent about synonyms and implications. For example:
     const reasons = [];
     const factors = {};
 
-    // ENHANCED: Require both product type AND color if both are specified
+    // STRICT FILTERING: Product type is MANDATORY for relevance
     const productTypeMatch = this.matchesProductType(product, analysis.product_type, analysis.synonyms_to_consider);
-    const colorMatch = this.matchesColor(product, analysis.colors);
     
-    // If user specified BOTH color and product type, BOTH must match STRICTLY
-    if (analysis.colors.length > 0 && analysis.product_type) {
-      if (productTypeMatch && colorMatch.matched) {
-        score += 100; // Very high score for exact match
-        reasons.push(`Exact match: ${colorMatch.matchedColor} ${analysis.product_type}`);
-        factors.exactMatch = true;
-      } else {
-        // STRICT: If color is specified but doesn't match, score very low
-        return { totalScore: 1, reasons: [`Wrong color for ${analysis.product_type} - looking for ${analysis.colors.join(', ')}`], factors: { wrongColor: true } };
-      }
-    } else {
-      // Original logic for single criteria
-      if (productTypeMatch) {
-        score += 50;
-        reasons.push(`Matches product type: ${analysis.product_type}`);
-        factors.productTypeMatch = true;
-      }
+    // If no product type match, immediately return very low score
+    if (analysis.product_type && !productTypeMatch) {
+      return { totalScore: 0, reasons: [`Not a ${analysis.product_type} - irrelevant product`], factors: { irrelevant: true } };
+    }
 
+    // Product type match is required for any meaningful score
+    if (productTypeMatch) {
+      score += 100; // High base score for correct product type
+      reasons.push(`Correct product type: ${analysis.product_type}`);
+      factors.productTypeMatch = true;
+    } else {
+      // Without product type match, don't even consider other factors
+      return { totalScore: 0, reasons: [`No product type match`], factors: { noMatch: true } };
+    }
+
+    // Now check color if specified - STRICT COLOR FILTERING
+    const colorMatch = this.matchesColor(product, analysis.colors);
+    if (analysis.colors.length > 0) {
       if (colorMatch.matched) {
-        score += 30;
+        score += 50; // Bonus for color match
         reasons.push(`Color match: ${colorMatch.matchedColor}`);
         factors.colorMatch = colorMatch.matchedColor;
+      } else {
+        // STRICT: If color is specified but doesn't match, return 0 score
+        return { totalScore: 0, reasons: [`Wrong color - looking for ${analysis.colors.join(', ')}, found different color`], factors: { wrongColor: true } };
       }
     }
 
@@ -236,7 +254,7 @@ Be intelligent about synonyms and implications. For example:
     }
 
     // Brand matching
-    if (analysis.brand_preferences.length > 0) {
+    if (analysis.brand_preferences && analysis.brand_preferences.length > 0) {
       const brandMatch = this.matchesBrand(product, analysis.brand_preferences);
       if (brandMatch) {
         score += 35;
@@ -251,6 +269,96 @@ Be intelligent about synonyms and implications. For example:
       score += 20;
       reasons.push(`Feature match: ${featureMatch.features.join(', ')}`);
       factors.featureMatch = featureMatch.features;
+    }
+
+    // NEW CHARACTERISTIC MATCHING
+    
+    // Fit preferences
+    const fitMatch = this.matchesCharacteristic(product, analysis.fit_preferences, ['fit_type', 'sizing_fit', 'cut_style']);
+    if (fitMatch.matched) {
+      score += 15;
+      reasons.push(`Fit match: ${fitMatch.matchedItems.join(', ')}`);
+      factors.fitMatch = fitMatch.matchedItems;
+    }
+
+    // Season/Weather
+    const seasonMatch = this.matchesCharacteristic(product, analysis.season_weather, ['season', 'weather_condition', 'name']);
+    if (seasonMatch.matched) {
+      score += 15;
+      reasons.push(`Season match: ${seasonMatch.matchedItems.join(', ')}`);
+      factors.seasonMatch = seasonMatch.matchedItems;
+    }
+
+    // Occasion type
+    const occasionMatch = this.matchesCharacteristic(product, analysis.occasion_type, ['occasion', 'event_type', 'dress_code']);
+    if (occasionMatch.matched) {
+      score += 15;
+      reasons.push(`Occasion match: ${occasionMatch.matchedItems.join(', ')}`);
+      factors.occasionMatch = occasionMatch.matchedItems;
+    }
+
+    // Age/Gender
+    const genderMatch = this.matchesCharacteristic(product, analysis.age_gender, ['gender', 'target_demographic', 'age_group', 'name']);
+    if (genderMatch.matched) {
+      score += 20;
+      reasons.push(`Gender/Age match: ${genderMatch.matchedItems.join(', ')}`);
+      factors.genderMatch = genderMatch.matchedItems;
+    }
+
+    // Technology features
+    const techMatch = this.matchesCharacteristic(product, analysis.technology_features, ['tech_features', 'connectivity', 'smart_features']);
+    if (techMatch.matched) {
+      score += 25;
+      reasons.push(`Tech match: ${techMatch.matchedItems.join(', ')}`);
+      factors.techMatch = techMatch.matchedItems;
+    }
+
+    // Sustainability
+    const sustainabilityMatch = this.matchesCharacteristic(product, analysis.sustainability, ['sustainability_features', 'eco_friendly', 'organic_certified']);
+    if (sustainabilityMatch.matched) {
+      score += 15;
+      reasons.push(`Sustainability match: ${sustainabilityMatch.matchedItems.join(', ')}`);
+      factors.sustainabilityMatch = sustainabilityMatch.matchedItems;
+    }
+
+    // Performance specs
+    const performanceMatch = this.matchesCharacteristic(product, analysis.performance_specs, ['performance_features', 'technical_specs', 'performance_tech']);
+    if (performanceMatch.matched) {
+      score += 20;
+      reasons.push(`Performance match: ${performanceMatch.matchedItems.join(', ')}`);
+      factors.performanceMatch = performanceMatch.matchedItems;
+    }
+
+    // Design aesthetics
+    const designMatch = this.matchesCharacteristic(product, analysis.design_aesthetics, ['design_style', 'aesthetic', 'visual_style']);
+    if (designMatch.matched) {
+      score += 10;
+      reasons.push(`Design match: ${designMatch.matchedItems.join(', ')}`);
+      factors.designMatch = designMatch.matchedItems;
+    }
+
+    // Comfort requirements
+    const comfortMatch = this.matchesCharacteristic(product, analysis.comfort_requirements, ['comfort_features', 'ergonomic_features', 'cushioning']);
+    if (comfortMatch.matched) {
+      score += 15;
+      reasons.push(`Comfort match: ${comfortMatch.matchedItems.join(', ')}`);
+      factors.comfortMatch = comfortMatch.matchedItems;
+    }
+
+    // Durability needs
+    const durabilityMatch = this.matchesCharacteristic(product, analysis.durability_needs, ['durability_features', 'build_quality', 'longevity_features']);
+    if (durabilityMatch.matched) {
+      score += 15;
+      reasons.push(`Durability match: ${durabilityMatch.matchedItems.join(', ')}`);
+      factors.durabilityMatch = durabilityMatch.matchedItems;
+    }
+
+    // Special conditions
+    const specialMatch = this.matchesCharacteristic(product, analysis.special_conditions, ['special_features', 'health_considerations', 'accessibility_features']);
+    if (specialMatch.matched) {
+      score += 20;
+      reasons.push(`Special conditions match: ${specialMatch.matchedItems.join(', ')}`);
+      factors.specialMatch = specialMatch.matchedItems;
     }
 
     // Text search fallback
@@ -280,21 +388,37 @@ Be intelligent about synonyms and implications. For example:
       product.specific_subcategory
     ].filter(Boolean).join(' ').toLowerCase();
 
-    // Direct match
-    if (productFields.includes(targetType.toLowerCase())) return true;
+    const targetLower = targetType.toLowerCase();
 
-    // Synonym matching
+    // ENHANCED: More precise word matching to avoid false positives
+    const productWords = productFields.split(/[\s\-_(),]+/).filter(word => word.length > 2);
+
+    // Direct word match (not just substring)
+    if (productWords.includes(targetLower)) return true;
+
+    // Synonym matching with word boundaries
     for (const synonym of (synonyms || [])) {
-      if (productFields.includes(synonym.toLowerCase())) return true;
+      const synonymLower = synonym.toLowerCase();
+      if (productWords.includes(synonymLower)) return true;
     }
 
-    // Industry category mapping
+    // Industry category mapping with stricter matching
     for (const [category, aliases] of Object.entries(this.industryRules.categoryMapping)) {
-      if (aliases.includes(targetType.toLowerCase()) || category === targetType.toLowerCase()) {
-        if (productFields.includes(category) || aliases.some(alias => productFields.includes(alias))) {
-          return true;
+      if (aliases.includes(targetLower) || category === targetLower) {
+        // Check if any category words appear as complete words
+        if (productWords.includes(category)) return true;
+        for (const alias of aliases) {
+          if (productWords.includes(alias)) return true;
         }
       }
+    }
+
+    // Special handling for shoes/footwear
+    if (targetLower === 'shoes' || targetLower === 'shoe') {
+      const shoeIndicators = ['shoe', 'shoes', 'sneaker', 'sneakers', 'boot', 'boots', 'sandal', 'sandals', 
+                             'heel', 'heels', 'flat', 'flats', 'loafer', 'loafers', 'runner', 'runners', 
+                             'trainer', 'trainers', 'footwear', 'oxford', 'moccasin'];
+      return shoeIndicators.some(indicator => productWords.includes(indicator));
     }
 
     return false;
@@ -303,57 +427,69 @@ Be intelligent about synonyms and implications. For example:
   matchesColor(product, targetColors) {
     if (!targetColors || targetColors.length === 0) return { matched: false };
 
-    const productColors = [
+    // Focus on PRIMARY product colors first, then name
+    const primaryColors = [
       product.primary_color,
-      product.secondary_color,
       product.color_primary,
-      product.color_description,
-      ...(product.all_colors || []),
-      ...(product.secondary_colors || []),
-      product.name
+      product.color_description
     ].filter(Boolean).join(' ').toLowerCase();
 
-    const colorWords = productColors.split(/[\s\-_(),]+/);
+    // Extract main color from product name (ignore sole/accent colors)
+    const productName = (product.name || '').toLowerCase();
+    
+    // Remove sole/accent color mentions to focus on main product color
+    const cleanedName = productName
+      .replace(/\(.*sole.*\)/gi, '')  // Remove "(Natural White Sole)" etc
+      .replace(/\(.*\)/gi, '')        // Remove any other parentheses
+      .replace(/sole/gi, '')          // Remove "sole" mentions
+      .replace(/with.*$/gi, '');      // Remove "with..." descriptions
+
+    const productColors = [primaryColors, cleanedName].filter(Boolean).join(' ').toLowerCase();
+
+    const colorWords = productColors.split(/[\s\-_(),]+/).filter(word => word.length > 2);
+
+    console.log(`🎨 Color matching for "${targetColors.join(',')}" against product colors:`, productColors);
 
     for (const targetColor of targetColors) {
       const colorLower = targetColor.toLowerCase();
       
-      // Enhanced color families with exclusions
+      // STRICT color families - only exact matches
       const colorFamilies = {
         'red': {
           include: ['red', 'crimson', 'ruby', 'cherry', 'burgundy', 'wine', 'poppy', 'scarlet', 'maroon'],
-          exclude: ['white', 'natural', 'cream', 'black', 'blue', 'green', 'yellow', 'sunshine', 'gold']
+          exclude: ['white', 'natural', 'cream', 'black', 'blue', 'green', 'yellow', 'sunshine', 'gold', 'forest', 'light']
         },
         'blue': {
-          include: ['blue', 'navy', 'royal', 'azure', 'cobalt', 'sapphire', 'teal', 'turquoise'],
-          exclude: ['white', 'natural', 'cream', 'black', 'red', 'green', 'yellow']
+          include: ['blue', 'navy', 'royal', 'azure', 'cobalt', 'sapphire'],
+          exclude: ['white', 'natural', 'cream', 'black', 'red', 'green', 'yellow', 'forest', 'light']
         },
         'black': {
           include: ['black', 'charcoal', 'onyx', 'midnight', 'ebony', 'jet'],
-          exclude: ['white', 'natural', 'cream', 'light', 'bright']
+          exclude: ['white', 'natural', 'cream', 'light', 'bright', 'forest', 'blue', 'green']
         },
         'white': {
           include: ['white', 'ivory', 'cream', 'pearl', 'snow', 'off-white', 'natural'],
-          exclude: ['black', 'dark', 'deep']
+          exclude: ['black', 'dark', 'deep', 'forest', 'green', 'blue', 'red', 'yellow']
         },
         'green': {
           include: ['green', 'forest', 'emerald', 'olive', 'sage', 'mint'],
-          exclude: ['white', 'natural', 'cream', 'black', 'red', 'blue', 'yellow']
+          exclude: ['white', 'natural', 'cream', 'black', 'red', 'blue', 'yellow', 'light']
         },
         'yellow': {
           include: ['yellow', 'gold', 'lemon', 'sunshine', 'amber', 'mustard'],
-          exclude: ['white', 'natural', 'cream', 'black', 'red', 'blue', 'green']
+          exclude: ['white', 'natural', 'cream', 'black', 'red', 'blue', 'green', 'forest']
         }
       };
 
       const family = colorFamilies[colorLower];
       if (family) {
-        // Check for exclusions first - if found, no match
+        // STRICT EXCLUSION: If any excluded color is found, immediately reject
         const hasExcluded = family.exclude.some(excludeColor => 
           colorWords.includes(excludeColor)
         );
         
         if (hasExcluded) {
+          console.log(`❌ Color excluded: found ${family.exclude.filter(exc => colorWords.includes(exc))} in product`);
           continue; // Skip this color due to exclusion
         }
         
@@ -366,17 +502,79 @@ Be intelligent about synonyms and implications. For example:
           const matchedWord = family.include.find(includeColor => 
             colorWords.includes(includeColor)
           );
+          console.log(`✅ Color match found: ${matchedWord}`);
           return { matched: true, matchedColor: `${targetColor} (${matchedWord})` };
         }
       } else {
         // Direct match for colors not in families
         if (colorWords.includes(colorLower)) {
+          console.log(`✅ Direct color match: ${colorLower}`);
           return { matched: true, matchedColor: targetColor };
         }
       }
     }
 
+    console.log(`❌ No color match found for ${targetColors.join(',')}`);
     return { matched: false };
+  }
+
+  // Generic characteristic matching function
+  matchesCharacteristic(product, targetCharacteristics, productFields) {
+    if (!targetCharacteristics || targetCharacteristics.length === 0) return { matched: false };
+
+    const productData = productFields.map(field => product[field]).filter(Boolean).join(' ').toLowerCase();
+    const productWords = productData.split(/[\s\-_(),]+/).filter(word => word.length > 2);
+
+    const matchedItems = [];
+
+    for (const characteristic of targetCharacteristics) {
+      const charLower = characteristic.toLowerCase();
+      
+      // Direct word match
+      if (productWords.includes(charLower)) {
+        matchedItems.push(characteristic);
+        continue;
+      }
+
+      // Partial match for compound characteristics
+      if (productData.includes(charLower)) {
+        matchedItems.push(characteristic);
+        continue;
+      }
+
+      // Common synonyms and variations
+      const synonymMap = {
+        'men': ['mens', 'male', 'man'],
+        'women': ['womens', 'female', 'woman', 'ladies'],
+        'kids': ['children', 'child', 'youth', 'junior'],
+        'casual': ['everyday', 'informal', 'relaxed'],
+        'formal': ['dress', 'business', 'professional'],
+        'comfortable': ['comfort', 'cushioned', 'soft'],
+        'waterproof': ['water-resistant', 'water-repellent', 'weatherproof'],
+        'lightweight': ['light', 'lite', 'ultralight'],
+        'durable': ['sturdy', 'robust', 'heavy-duty'],
+        'winter': ['cold', 'snow', 'insulated'],
+        'summer': ['warm', 'breathable', 'cooling'],
+        'premium': ['luxury', 'high-end', 'deluxe'],
+        'cheap': ['budget', 'affordable', 'economy'],
+        'slim': ['skinny', 'narrow', 'fitted'],
+        'loose': ['relaxed', 'baggy', 'oversized']
+      };
+
+      if (synonymMap[charLower]) {
+        for (const synonym of synonymMap[charLower]) {
+          if (productWords.includes(synonym) || productData.includes(synonym)) {
+            matchedItems.push(characteristic);
+            break;
+          }
+        }
+      }
+    }
+
+    return {
+      matched: matchedItems.length > 0,
+      matchedItems: matchedItems
+    };
   }
 
   matchesMaterial(product, targetMaterials) {
@@ -525,18 +723,51 @@ Be intelligent about synonyms and implications. For example:
     return Math.min(matchCount * 5, 20); // Max 20 points for text matching
   }
 
-  scoreAndRankResults(products, analysis) {
-    return products
-      .sort((a, b) => b.matchScore - a.matchScore)
-      .map((product, index) => ({
-        name: product.name,
-        price: product.price,
-        image: product.image || product.main_image,  // Fixed: use correct field name
-        source_store: product.source_store,          // Fixed: include store field
-        vendor: product.vendor,                      // Fixed: include vendor field  
-        rank: index + 1,
-        matchScore: product.matchScore
-      }));
+  async scoreAndRankResults(products, analysis) {
+    const sortedProducts = products.sort((a, b) => b.matchScore - a.matchScore);
+    
+    // Use GPT to clean and improve product names
+    const cleanedProducts = await Promise.all(
+      sortedProducts.map(async (product, index) => {
+        const cleanedName = await this.cleanProductName(product.name);
+        return {
+          name: cleanedName,
+          price: product.price,
+          image: product.image || product.main_image,
+          source_store: product.source_store,
+          vendor: product.vendor,
+          rank: index + 1,
+          matchScore: product.matchScore
+        };
+      })
+    );
+    
+    return cleanedProducts;
+  }
+
+  async cleanProductName(productName) {
+    if (!productName) return "Unknown Product";
+    
+    try {
+      const prompt = `Clean up this product name to be more readable and customer-friendly. Remove unnecessary details, fix formatting, but keep essential information like color, brand, and product type.
+
+Original: "${productName}"
+
+Return ONLY the cleaned product name, nothing else.`;
+
+      const response = await openai.chat.completions.create({
+        model: "gpt-4-turbo",
+        messages: [{ role: "user", content: prompt }],
+        temperature: 0.1,
+        max_tokens: 100
+      });
+
+      const cleaned = response.choices[0].message.content.trim();
+      return cleaned || productName;
+    } catch (error) {
+      console.error("Error cleaning product name:", error);
+      return productName;
+    }
   }
 
   async generateIntelligentResponse(query, results, analysis) {
@@ -570,7 +801,7 @@ Be enthusiastic and helpful!
 `;
 
     const response = await openai.chat.completions.create({
-      model: "gpt-4",
+      model: "gpt-4-turbo",
       messages: [{ role: "user", content: prompt }],
       temperature: 0.3,
       max_tokens: 400
@@ -668,7 +899,7 @@ app.get('/health', (req, res) => {
 });
 
 // Start server
-const PORT = process.env.MCP_PORT || 3001;
+const PORT = process.env.MCP_PORT || 3002;
 app.listen(PORT, () => {
   console.log(`🤖 MCP PRODUCT FINDER AGENT RUNNING ON PORT ${PORT}`);
   console.log(`🔍 Intelligent product search with industry rules activated`);
