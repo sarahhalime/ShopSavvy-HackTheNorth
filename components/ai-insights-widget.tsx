@@ -5,7 +5,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Brain, TrendingUp, AlertCircle, Lightbulb, RefreshCw } from "lucide-react"
-import { mockOrders } from "@/lib/mock-data"
+import { mockOrders, mockProducts } from "@/lib/mock-data"
+import { getAIResponse } from "@/lib/gemini-api"
 
 interface AIInsights {
   bullets: string[]
@@ -19,6 +20,9 @@ interface AIInsights {
 export function AIInsightsWidget() {
   const [insights, setInsights] = useState<AIInsights | null>(null)
   const [isLoading, setIsLoading] = useState(false)
+  const [chatInput, setChatInput] = useState("")
+  const [chatLoading, setChatLoading] = useState(false)
+  const [chatReply, setChatReply] = useState<string | null>(null)
 
   const fetchInsights = async () => {
     setIsLoading(true)
@@ -28,8 +32,22 @@ export function AIInsightsWidget() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           orders: mockOrders.map((order) => ({
-            ...order,
-            createdAt: order.createdAt.toISOString(),
+            id: order.id,
+            items: order.items.map((item) => {
+              const product = mockProducts.find((p) => p.id === item.productId)
+              const category = product?.category || "General"
+              return {
+                title: item.title,
+                priceCents: item.price,
+                category,
+                qty: item.quantity ?? (item as any).qty ?? 1,
+              }
+            }),
+            totalCents: (order as any).totalAmount ?? (order as any).totalCents ?? 0,
+            createdAt:
+              typeof (order as any).createdAt === "string"
+                ? (order as any).createdAt
+                : (order as any).createdAt?.toISOString?.() ?? "",
           })),
         }),
       })
@@ -48,6 +66,21 @@ export function AIInsightsWidget() {
   useEffect(() => {
     fetchInsights()
   }, [])
+
+  const askGemini = async () => {
+    if (!chatInput.trim()) return
+    setChatLoading(true)
+    setChatReply(null)
+    try {
+      const res = await getAIResponse({ content: chatInput, mood: "curious" })
+      const reply = typeof res === "string" ? res : (res as any).response
+      setChatReply(reply)
+    } catch (e: any) {
+      setChatReply("Sorry, I couldn't reach the AI service. Please try again.")
+    } finally {
+      setChatLoading(false)
+    }
+  }
 
   const formatPrice = (cents: number) => {
     return new Intl.NumberFormat("en-US", {
@@ -168,6 +201,37 @@ export function AIInsightsWidget() {
         </CardHeader>
         <CardContent>
           <p className="text-sm">{insights.savingsTip}</p>
+        </CardContent>
+      </Card>
+
+      {/* Gemini Chat */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Brain className="w-5 h-5" />
+            Ask the AI Coach
+          </CardTitle>
+          <CardDescription>Get quick, supportive financial guidance powered by Gemini</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div className="flex gap-2">
+            <input
+              className="flex-1 border rounded-md px-3 py-2 text-sm"
+              placeholder="e.g., How do I budget on an irregular income?"
+              value={chatInput}
+              onChange={(e) => setChatInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") askGemini()
+              }}
+            />
+            <Button onClick={askGemini} disabled={chatLoading}>
+              {chatLoading ? <RefreshCw className="w-4 h-4 mr-2 animate-spin" /> : <Brain className="w-4 h-4 mr-2" />}
+              Ask
+            </Button>
+          </div>
+          {chatReply && (
+            <div className="p-3 bg-muted rounded-md text-sm whitespace-pre-wrap">{chatReply}</div>
+          )}
         </CardContent>
       </Card>
 

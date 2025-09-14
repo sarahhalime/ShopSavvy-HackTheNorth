@@ -32,7 +32,28 @@ interface SpendingInsights {
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json()
+    const raw = await request.json()
+    const body = {
+      orders: Array.isArray(raw?.orders)
+        ? raw.orders.map((o: any) => ({
+            id: String(o?.id ?? ""),
+            items: Array.isArray(o?.items)
+              ? o.items.map((it: any) => ({
+                  title: String(it?.title ?? "Item"),
+                  priceCents: Number(it?.priceCents ?? it?.price ?? 0),
+                  category: String(it?.category ?? "General"),
+                  qty: Number(it?.qty ?? it?.quantity ?? 1),
+                }))
+              : [],
+            totalCents: Number(o?.totalCents ?? o?.totalAmount ?? 0),
+            createdAt:
+              typeof o?.createdAt === "string"
+                ? o.createdAt
+                : new Date(o?.createdAt ?? Date.now()).toISOString(),
+          }))
+        : [],
+    }
+
     const { orders } = insightsRequestSchema.parse(body)
 
     if (isMockMode.ai) {
