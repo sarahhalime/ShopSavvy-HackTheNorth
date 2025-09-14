@@ -48,6 +48,7 @@ const mockEthRewards: EthReward[] = [
 export function EthRewardsWidget() {
   const [rewards, setRewards] = useState<EthReward[]>(mockEthRewards)
   const [isClaiming, setIsClaiming] = useState<string | null>(null)
+  const [isTestingReward, setIsTestingReward] = useState(false)
 
   const pendingRewards = rewards.filter(r => r.status === 'pending')
   const claimedRewards = rewards.filter(r => r.status === 'claimed')
@@ -83,6 +84,49 @@ export function EthRewardsWidget() {
     ))
     
     setIsClaiming(null)
+  }
+
+  const testRewardSystem = async () => {
+    setIsTestingReward(true)
+    
+    try {
+      // Use existing verify-ethereum API to test rewards
+      const response = await fetch("/api/checkout/verify-ethereum", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          reference: `test-${Date.now()}`,
+          signature: `demo_signature_${Date.now()}`,
+          purchaseAmount: 50, // $50 test purchase
+          buyerAddress: "0xDemo1234567890123456789012345678901234567890"
+        })
+      })
+
+      const result = await response.json()
+
+      if (result.success && result.ethReward) {
+        // Add new reward to the list
+        const newReward: EthReward = {
+          id: `test_reward_${Date.now()}`,
+          amount: result.ethReward.amount,
+          status: 'pending',
+          earnedAt: new Date(),
+          purchaseReference: result.reference,
+          transactionHash: result.ethReward.transactionHash
+        }
+
+        setRewards(prev => [newReward, ...prev])
+        
+        // Show success message in console since we removed toast
+        console.log("🎊 You Won ETH!", `Congratulations! You won ${result.ethReward.amount} ETH!`)
+      } else {
+        console.log("🎯 No Reward This Time", "Better luck next time! Keep trying for that 30% chance.")
+      }
+    } catch (error) {
+      console.error("Test Failed", "Failed to test reward system. Please try again.", error)
+    } finally {
+      setIsTestingReward(false)
+    }
   }
 
   const openEtherscan = (txHash: string) => {
@@ -127,6 +171,35 @@ export function EthRewardsWidget() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Test Reward Button */}
+      <Card className="border-blue-200 bg-gradient-to-br from-blue-50 to-indigo-50">
+        <CardHeader>
+          <CardTitle className="text-blue-700">🎲 Test ETH Rewards</CardTitle>
+          <CardDescription>
+            Test the ETH reward system to see if you win! 30% chance to get ETH rewards.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Button
+            onClick={testRewardSystem}
+            disabled={isTestingReward}
+            className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700"
+          >
+            {isTestingReward ? (
+              <>
+                <Zap className="w-4 h-4 mr-2 animate-spin" />
+                Testing Reward System...
+              </>
+            ) : (
+              <>
+                <Zap className="w-4 h-4 mr-2" />
+                Test ETH Reward (30% chance)
+              </>
+            )}
+          </Button>
+        </CardContent>
+      </Card>
 
       {/* Pending Rewards */}
       {pendingRewards.length > 0 && (

@@ -12,9 +12,11 @@ const processEthereumReward = async (
   buyerAddress: string, 
   purchaseAmount: number
 ): Promise<EthRewardResult> => {
-  // Simulate Chainlink VRF randomness (30% win chance)
+  // Simulate Chainlink VRF randomness (90% win chance for testing)
   const random = Math.random()
-  const won = random < 0.3 // 30% chance
+  const won = random < 0.9 // 90% chance for testing (change back to 0.3 for production)
+  
+  console.log(`🎲 ETH Reward Roll: ${random.toFixed(3)} (need < 0.9 to win) → ${won ? '🎉 WON!' : '❌ Lost'}`)
   
   if (!won) {
     return { won: false }
