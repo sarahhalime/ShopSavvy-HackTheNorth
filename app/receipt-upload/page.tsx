@@ -10,19 +10,9 @@ import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Progress } from "@/components/ui/progress"
-import {
-  Upload,
-  Camera,
-  CheckCircle,
-  AlertTriangle,
-  ArrowLeft,
-  Zap,
-  FileText,
-  DollarSign,
-  Calendar,
-  Store,
-} from "lucide-react"
+import { Upload, Camera, CheckCircle, AlertTriangle, FileText, DollarSign, Calendar, Store } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
+import { DashboardTopbar } from "@/components/dashboard-topbar"
 
 interface ReconciliationResult {
   success: boolean
@@ -147,32 +137,13 @@ export default function ReceiptUploadPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted">
-      {/* Header */}
-      <header className="border-b bg-background/95 backdrop-blur">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            <Button variant="ghost" size="sm" onClick={() => router.back()}>
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back
-            </Button>
-            <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-                <Zap className="w-5 h-5 text-primary-foreground" />
-              </div>
-              <div>
-                <h1 className="text-lg font-semibold">Receipt Reconciliation</h1>
-                <p className="text-xs text-muted-foreground">AI-powered receipt processing</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </header>
+      <DashboardTopbar active="profile" />
 
       <main className="container mx-auto px-4 py-8 max-w-4xl">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-stretch">
           {/* Upload Section */}
-          <div className="space-y-6">
-            <Card>
+          <div className="space-y-6 h-full">
+            <Card className="h-full">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Upload className="w-5 h-5" />
@@ -180,7 +151,7 @@ export default function ReceiptUploadPage() {
                 </CardTitle>
                 <CardDescription>Upload a photo of your receipt to verify your Solana Pay transaction</CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-4 flex flex-col h-full">
                 <div className="space-y-2">
                   <Label htmlFor="receipt-upload">Receipt Image</Label>
                   <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-6 text-center">
@@ -247,13 +218,15 @@ export default function ReceiptUploadPage() {
                   </div>
                 )}
 
-                <Button
-                  onClick={processReceipt}
-                  disabled={!selectedFile || !transactionSig || !expectedTotal || isProcessing}
-                  className="w-full"
-                >
-                  {isProcessing ? "Processing..." : "Process Receipt"}
-                </Button>
+                <div className="mt-6">
+                  <Button
+                    onClick={processReceipt}
+                    disabled={!selectedFile || !transactionSig || !expectedTotal || isProcessing}
+                    className="w-full"
+                  >
+                    {isProcessing ? "Processing..." : "Process Receipt"}
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           </div>

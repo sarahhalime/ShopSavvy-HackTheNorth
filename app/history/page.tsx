@@ -1,12 +1,6 @@
-"use client"
-
 import { redirect } from "next/navigation"
-import { useEffect } from "react"
 
 export default function HistoryPage() {
-  useEffect(() => {
-    redirect("/dashboard")
-  }, [])
-
-  return null
+  // Server-side redirect to the dashboard history tab
+  redirect("/dashboard?tab=history")
 }

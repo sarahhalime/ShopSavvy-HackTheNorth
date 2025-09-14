@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { DashboardTopbar } from "@/components/dashboard-topbar"
 
 interface Product {
   name: string
@@ -128,26 +129,8 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header - Compact when showing results */}
-      <header className={`p-6 transition-all duration-300 ${hasSearched ? 'pb-4' : ''}`}>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-              <Zap className="w-5 h-5 text-primary-foreground" />
-            </div>
-            <span className="text-xl font-bold">ShopSavvy</span>
-          </div>
-          <nav className="flex items-center space-x-6">
-            <a href="/search" className="text-muted-foreground hover:text-foreground transition-colors">
-              Search
-            </a>
-            <a href="/history" className="text-muted-foreground hover:text-foreground transition-colors">
-              History
-            </a>
-            <Button size="sm">Sign In</Button>
-          </nav>
-        </div>
-      </header>
+      {/* Topbar with Search active and auth buttons */}
+      <DashboardTopbar active="search" showAuth />
 
       {/* Search Bar - Always visible */}
       <div className={`px-6 transition-all duration-300 ${hasSearched ? 'mb-8' : ''}`}>
