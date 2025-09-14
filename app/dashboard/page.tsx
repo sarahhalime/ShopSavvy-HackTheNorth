@@ -41,15 +41,25 @@ export default function DashboardPage() {
     }).format(cents / 100)
   }
 
-  const formatDate = (date: Date) => {
+  const formatDate = (date: Date | string) => {
+    const d = typeof date === "string" ? new Date(date) : date
+    if (isNaN(d.getTime())) return "—"
     return new Intl.DateTimeFormat("en-US", {
       month: "short",
       day: "numeric",
       year: "numeric",
-    }).format(date)
+    }).format(d)
   }
 
-  const totalSpent = mockOrders.reduce((sum: number, order: Order) => sum + order.totalCents, 0)
+  // Support both legacy totalCents and new totalAmount (cents)
+  const getTotalCents = (order: any) =>
+    typeof order.totalCents === "number"
+      ? order.totalCents
+      : typeof order.totalAmount === "number"
+      ? order.totalAmount
+      : 0
+
+  const totalSpent = (mockOrders as any[]).reduce((sum: number, order: any) => sum + getTotalCents(order), 0)
   const totalOrders = mockOrders.length
 
   return (
@@ -103,19 +113,19 @@ export default function DashboardPage() {
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-4">
-                      {mockOrders.map((order) => (
+                      {mockOrders.map((order: any) => (
                         <div key={order.id} className="flex items-center justify-between p-4 border rounded-lg">
                           <div className="space-y-1">
                             <div className="flex items-center space-x-2">
                               <h4 className="font-medium">Order #{order.id}</h4>
-                              <Badge variant={order.status === "confirmed" ? "default" : "secondary"}>
+                              <Badge variant={["confirmed","delivered","shipped"].includes(order.status) ? "default" : "secondary"}>
                                 {order.status}
                               </Badge>
                             </div>
                             <div className="text-sm text-muted-foreground">
-                              {order.items.map((item, idx) => (
+                              {order.items.map((item: any, idx: number) => (
                                 <span key={idx}>
-                                  {item.title} (x{item.qty}){idx < order.items.length - 1 && ", "}
+                                  {item.title} (x{item.quantity ?? item.qty}){idx < order.items.length - 1 && ", "}
                                 </span>
                               ))}
                             </div>
@@ -124,14 +134,10 @@ export default function DashboardPage() {
                                 <Calendar className="w-3 h-3 mr-1" />
                                 {formatDate(order.createdAt)}
                               </span>
-                              <span className="flex items-center">
-                                <ExternalLink className="w-3 h-3 mr-1" />
-                                {order.solanaSig}
-                              </span>
                             </div>
                           </div>
                           <div className="text-right">
-                            <div className="font-bold">{formatPrice(order.totalCents)}</div>
+                            <div className="font-bold">{formatPrice(getTotalCents(order))}</div>
                             <Button variant="outline" size="sm" className="mt-2 bg-transparent">
                               View Details
                             </Button>

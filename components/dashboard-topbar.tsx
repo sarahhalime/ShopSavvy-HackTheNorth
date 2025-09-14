@@ -65,6 +65,9 @@ export function DashboardTopbar({ active, onTabChange, title, showAuth = true, h
               <Button variant={active === "analytics" ? "default" : "ghost"} onClick={() => go("analytics")}>
                 <TrendingUp className="w-4 h-4 mr-2" /> Analytics
               </Button>
+              <Button variant={active === "rewards" ? "default" : "ghost"} onClick={() => go("rewards")}>
+                <Gift className="w-4 h-4 mr-2" /> ETH Rewards
+              </Button>
               <Button variant={active === "profile" ? "default" : "ghost"} onClick={() => go("profile")}>
                 <User className="w-4 h-4 mr-2" /> Profile
               </Button>
