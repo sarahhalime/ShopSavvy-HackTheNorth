@@ -130,11 +130,11 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-background">
       {/* Topbar with Search active and auth buttons */}
-      <DashboardTopbar active="search" showAuth />
+  <DashboardTopbar active="search" showAuth hideTitle />
 
       {/* Search Bar - Always visible */}
       <div className={`px-6 transition-all duration-300 ${hasSearched ? 'mb-8' : ''}`}>
-        <div className={`max-w-2xl mx-auto ${!hasSearched ? 'mt-20' : ''}`}>
+        <div className={`max-w-2xl mx-auto ${hasSearched ? 'mt-12' : 'mt-20'}`}>
           {/* Logo - Only show when no search has been made */}
           {!hasSearched && (
             <div className="text-center mb-8">

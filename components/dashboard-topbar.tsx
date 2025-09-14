@@ -11,9 +11,11 @@ interface DashboardTopbarProps {
   onTabChange?: (tab: Exclude<Tab, "search" | "auth">) => void
   title?: string
   showAuth?: boolean
+  hideSearch?: boolean
+  hideTitle?: boolean
 }
 
-export function DashboardTopbar({ active, onTabChange, title, showAuth = true }: DashboardTopbarProps) {
+export function DashboardTopbar({ active, onTabChange, title, showAuth = true, hideSearch = false, hideTitle = false }: DashboardTopbarProps) {
   const go = (tab: Tab) => {
     if (onTabChange && tab !== "search" && tab !== "auth") onTabChange(tab)
   }
@@ -38,15 +40,17 @@ export function DashboardTopbar({ active, onTabChange, title, showAuth = true }:
           <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
             <Zap className="w-5 h-5 text-primary-foreground" />
           </div>
-          <h1 className="text-lg font-semibold">{derivedTitle}</h1>
+          {!hideTitle && <h1 className="text-lg font-semibold">{derivedTitle}</h1>}
         </div>
         <div className="flex items-center gap-2">
-          {/* Search goes to landing page */}
-          <Button asChild variant={active === "search" ? "default" : "ghost"}>
-            <Link href="/">
-              <SearchIcon className="w-4 h-4 mr-2" /> Search
-            </Link>
-          </Button>
+          {/* Search goes to landing page (optional hide on landing) */}
+          {!hideSearch && (
+            <Button asChild variant={active === "search" ? "default" : "ghost"}>
+              <Link href="/">
+                <SearchIcon className="w-4 h-4 mr-2" /> Search
+              </Link>
+            </Button>
+          )}
           {/* Tabs - if onTabChange provided, use it; else deep-link to dashboard */}
           {onTabChange ? (
             <>
