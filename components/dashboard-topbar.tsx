@@ -2,9 +2,9 @@
 
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { Brain, History, TrendingUp, Zap, Search as SearchIcon, User } from "lucide-react"
+import { Brain, History, TrendingUp, Zap, Search as SearchIcon, User, Gift } from "lucide-react"
 
-type Tab = "search" | "history" | "insights" | "analytics" | "profile" | "auth"
+type Tab = "search" | "history" | "insights" | "analytics" | "profile" | "rewards" | "auth"
 
 interface DashboardTopbarProps {
   active: Tab
@@ -29,6 +29,8 @@ export function DashboardTopbar({ active, onTabChange, title, showAuth = true, h
       ? "AI Insights"
       : active === "analytics"
       ? "Analytics"
+      : active === "rewards"
+      ? "ETH Rewards"
       : active === "profile"
       ? "Profile"
       : "Sign in/Sign up")
@@ -82,6 +84,11 @@ export function DashboardTopbar({ active, onTabChange, title, showAuth = true, h
               <Button asChild variant={active === "analytics" ? "default" : "ghost"}>
                 <Link href="/dashboard?tab=analytics">
                   <TrendingUp className="w-4 h-4 mr-2" /> Analytics
+                </Link>
+              </Button>
+              <Button asChild variant={active === "rewards" ? "default" : "ghost"}>
+                <Link href="/dashboard?tab=rewards">
+                  <Gift className="w-4 h-4 mr-2" /> ETH Rewards
                 </Link>
               </Button>
               <Button asChild variant={active === "profile" ? "default" : "ghost"}>

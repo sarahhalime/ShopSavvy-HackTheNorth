@@ -5,7 +5,7 @@ import type BigNumber from "bignumber.js"
 
 export async function POST(request: NextRequest) {
   try {
-    const { items, paymentMethod = "sol" } = await request.json()
+    const { items, paymentMethod = "sol", ethRewardEnabled = false } = await request.json()
 
     if (!items || items.length === 0) {
       return NextResponse.json({ error: "No items provided" }, { status: 400 })
@@ -59,6 +59,7 @@ export async function POST(request: NextRequest) {
       totalUsd,
       items,
       network: SOLANA_PAY_CONFIG.NETWORK,
+      ethRewardEnabled,
     })
   } catch (error) {
     console.error("Checkout creation error:", error)

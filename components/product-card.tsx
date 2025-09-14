@@ -7,6 +7,7 @@ import { Card, CardContent, CardFooter } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Star, Plus, ShoppingCart, GitCompare } from "lucide-react"
+import { EnhancedBuyButton } from "@/components/enhanced-buy-button"
 
 interface Product {
   id: string
@@ -128,16 +129,37 @@ export function ProductCard({ product, onAddToCompare, isInCompare }: ProductCar
         </div>
       </CardContent>
 
-      <CardFooter className="p-4 pt-0 space-y-2">
-            <div className="flex space-x-2 w-full">
-              <Button className="flex-1" size="sm" aria-label="Buy Now" title="Buy Now">
-                Buy Now
-              </Button>
-              <Button size="sm" variant="outline" aria-label="Add to Compare" title="Add to Compare">
-                <Plus className="w-3 h-3" />
-              </Button>
-            </div>
-          </CardFooter>
+      <CardFooter className="p-4 pt-0">
+        <div className="w-full space-y-2">
+          <EnhancedBuyButton 
+            product={{
+              id: product.id,
+              title: product.title,
+              price: product.price,
+              vendor: product.vendor,
+              tags: product.tags,
+              image: product.image,
+              rating: product.rating,
+              category: product.category
+            }}
+          />
+          {onAddToCompare && (
+            <Button 
+              size="sm" 
+              variant="outline" 
+              onClick={(e) => {
+                e.preventDefault()
+                onAddToCompare()
+              }}
+              disabled={isInCompare}
+              className="w-full"
+            >
+              <GitCompare className="w-3 h-3 mr-1" />
+              {isInCompare ? "In Compare" : "Add to Compare"}
+            </Button>
+          )}
+        </div>
+      </CardFooter>
     </Card>
   )
 }

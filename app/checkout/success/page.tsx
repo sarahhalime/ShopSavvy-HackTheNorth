@@ -6,14 +6,17 @@ import { useCartStore } from "@/lib/cart-store"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { CheckCircle, Copy, ExternalLink } from "lucide-react"
+import { CheckCircle, Copy, ExternalLink, Gift, Sparkles, Zap } from "lucide-react"
 import Link from "next/link"
 
 export default function CheckoutSuccessPage() {
   const searchParams = useSearchParams()
   const reference = searchParams.get("reference")
+  const ethReward = searchParams.get("ethReward") === "true"
+  const rewardAmount = searchParams.get("rewardAmount") || "0"
   const { items, clearCart, getTotalPrice } = useCartStore()
   const [orderConfirmed, setOrderConfirmed] = useState(false)
+  const [showRewardAnimation, setShowRewardAnimation] = useState(false)
 
   const formatPrice = (cents: number) => {
     return new Intl.NumberFormat("en-US", {
@@ -27,10 +30,18 @@ export default function CheckoutSuccessPage() {
     const timer = setTimeout(() => {
       setOrderConfirmed(true)
       clearCart()
+      
+      // Show reward animation if ETH reward was won
+      if (ethReward && parseFloat(rewardAmount) > 0) {
+        setShowRewardAnimation(true)
+        
+        // Hide animation after 5 seconds
+        setTimeout(() => setShowRewardAnimation(false), 5000)
+      }
     }, 2000)
 
     return () => clearTimeout(timer)
-  }, [clearCart])
+  }, [clearCart, ethReward, rewardAmount])
 
   const totalPrice = getTotalPrice()
   const mockTransactionSignature =
@@ -55,10 +66,56 @@ export default function CheckoutSuccessPage() {
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="max-w-2xl mx-auto">
+        {/* ETH Reward Animation Overlay */}
+        {showRewardAnimation && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 animate-in fade-in-0">
+            <Card className="w-96 border-yellow-500 bg-gradient-to-br from-yellow-50 to-orange-50">
+              <CardHeader className="text-center">
+                <div className="mx-auto mb-4 relative">
+                  <div className="w-20 h-20 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full flex items-center justify-center animate-bounce">
+                    <Sparkles className="w-10 h-10 text-white" />
+                  </div>
+                  <div className="absolute -top-2 -right-2 w-8 h-8 bg-yellow-300 rounded-full animate-ping"></div>
+                </div>
+                <CardTitle className="text-2xl font-bold text-yellow-700">
+                  🎉 Congratulations!
+                </CardTitle>
+                <CardDescription className="text-lg text-yellow-600">
+                  You won <span className="font-bold text-xl">{rewardAmount} ETH</span>!
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="text-center space-y-4">
+                <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+                  <Zap className="w-4 h-4" />
+                  Reward will be available in your dashboard
+                </div>
+                <Button 
+                  onClick={() => setShowRewardAnimation(false)}
+                  className="w-full bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600"
+                >
+                  Awesome! 🚀
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
         <div className="text-center mb-8">
           <CheckCircle className="h-16 w-16 text-green-500 mx-auto mb-4" />
           <h1 className="text-3xl font-bold text-green-600 mb-2">Payment Successful!</h1>
           <p className="text-muted-foreground">Your order has been confirmed and is being processed.</p>
+          
+          {/* ETH Reward Success Banner */}
+          {ethReward && parseFloat(rewardAmount) > 0 && (
+            <div className="mt-4 p-4 bg-gradient-to-r from-yellow-100 to-orange-100 rounded-lg border border-yellow-300">
+              <div className="flex items-center justify-center gap-2 text-yellow-700">
+                <Gift className="w-5 h-5" />
+                <span className="font-semibold">
+                  Bonus: You won {rewardAmount} ETH! 🎊
+                </span>
+              </div>
+            </div>
+          )}
         </div>
 
         <Card className="mb-6">
@@ -108,10 +165,52 @@ export default function CheckoutSuccessPage() {
               <div className="flex items-center gap-2">
                 <Badge variant="secondary">Confirmed</Badge>
                 <Badge variant="outline">Solana Mainnet</Badge>
+                {ethReward && parseFloat(rewardAmount) > 0 && (
+                  <Badge className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white">
+                    <Gift className="w-3 h-3 mr-1" />
+                    ETH Reward Won
+                  </Badge>
+                )}
               </div>
             </div>
           </CardContent>
         </Card>
+
+        {/* ETH Reward Details Card */}
+        {ethReward && parseFloat(rewardAmount) > 0 && (
+          <Card className="mb-6 border-yellow-200 bg-gradient-to-br from-yellow-50 to-orange-50">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-yellow-700">
+                <Sparkles className="w-5 h-5" />
+                Ethereum Reward Details
+              </CardTitle>
+              <CardDescription>Your ETH reward from this purchase</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm font-medium">Reward Amount:</span>
+                  <span className="font-bold text-lg text-yellow-700">{rewardAmount} ETH</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm font-medium">Win Probability:</span>
+                  <span className="text-sm text-muted-foreground">30% (You were lucky!)</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm font-medium">Status:</span>
+                  <Badge variant="secondary" className="bg-yellow-100 text-yellow-700">
+                    Available in Dashboard
+                  </Badge>
+                </div>
+                <div className="p-3 bg-yellow-100 rounded-lg border border-yellow-200">
+                  <p className="text-sm text-yellow-700">
+                    🎲 <strong>How it works:</strong> Every purchase has a 30% chance to win ETH rewards powered by Chainlink VRF for true randomness. Check your dashboard to claim your rewards!
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         <div className="flex gap-4 justify-center">
           <Button asChild>

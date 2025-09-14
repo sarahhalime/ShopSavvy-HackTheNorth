@@ -6,9 +6,10 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { ArrowLeft, History, Brain, TrendingUp, DollarSign, ShoppingBag, Calendar, ExternalLink, Zap, Upload, Camera, FileText, User } from "lucide-react"
+import { ArrowLeft, History, Brain, TrendingUp, DollarSign, ShoppingBag, Calendar, ExternalLink, Zap, Upload, Camera, FileText, User, Gift } from "lucide-react"
 import { mockOrders, Order } from "../../lib/mock-data"
 import { AIInsightsWidget } from "@/components/ai-insights-widget"
+import { EthRewardsWidget } from "@/components/eth-rewards-widget"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Progress } from "@/components/ui/progress"
@@ -82,16 +83,14 @@ export default function DashboardPage() {
                     </CardContent>
                   </Card>
 
-                  <Card>
+                  <Card className="border-yellow-200 bg-gradient-to-br from-yellow-50 to-orange-50">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                      <CardTitle className="text-sm font-medium">Avg Order Value</CardTitle>
-                      <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                      <CardTitle className="text-sm font-medium text-yellow-700">ETH Rewards</CardTitle>
+                      <Zap className="h-4 w-4 text-yellow-600" />
                     </CardHeader>
                     <CardContent>
-                      <div className="text-2xl font-bold">
-                        {formatPrice(totalOrders > 0 ? totalSpent / totalOrders : 0)}
-                      </div>
-                      <p className="text-xs text-muted-foreground">Per transaction</p>
+                      <div className="text-2xl font-bold text-yellow-700">0.004670 ETH</div>
+                      <p className="text-xs text-yellow-600">~$15.41 pending</p>
                     </CardContent>
                   </Card>
                 </div>
@@ -208,6 +207,12 @@ export default function DashboardPage() {
             {activeTab === "insights" && (
               <div className="space-y-6">
                 <AIInsightsWidget />
+              </div>
+            )}
+
+            {activeTab === "rewards" && (
+              <div className="space-y-6">
+                <EthRewardsWidget />
               </div>
             )}
 

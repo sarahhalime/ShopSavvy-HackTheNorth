@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { DashboardTopbar } from "@/components/dashboard-topbar"
+import { EnhancedBuyButton } from "@/components/enhanced-buy-button"
 
 interface Product {
   name: string
@@ -114,14 +115,19 @@ export default function HomePage() {
               {product.store}
             </Badge>
           </div>
-          <Button
-            size="sm"
-            className="w-full group-hover:bg-primary/90"
-            aria-label="Buy Now"
-            title="Buy Now"
-          >
-            Buy Now
-          </Button>
+          <EnhancedBuyButton 
+            product={{
+              id: product.id,
+              title: product.name,
+              price: parseFloat(product.price.replace('$', '')) * 100, // Convert to cents
+              vendor: product.store,
+              tags: [product.category || 'general'],
+              image: product.image || '/placeholder.svg',
+              rating: 4.5,
+              category: product.category || 'General'
+            }}
+            className="w-full"
+          />
         </div>
       </CardContent>
     </Card>
