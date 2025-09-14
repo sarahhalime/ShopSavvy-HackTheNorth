@@ -113,8 +113,13 @@ export default function HomePage() {
               {product.store}
             </Badge>
           </div>
-          <Button size="sm" className="w-full group-hover:bg-primary/90">
-            View Details
+          <Button
+            size="sm"
+            className="w-full group-hover:bg-primary/90"
+            aria-label="Buy Now"
+            title="Buy Now"
+          >
+            Buy Now
           </Button>
         </div>
       </CardContent>

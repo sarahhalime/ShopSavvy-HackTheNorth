@@ -129,16 +129,15 @@ export function ProductCard({ product, onAddToCompare, isInCompare }: ProductCar
       </CardContent>
 
       <CardFooter className="p-4 pt-0 space-y-2">
-        <div className="flex space-x-2 w-full">
-          <Button asChild className="flex-1" size="sm">
-            <Link href={`/product/${product.id}`}>View Details</Link>
-          </Button>
-          <Button size="sm" variant="outline">
-            <Plus className="w-3 h-3 mr-1" />
-            Cart
-          </Button>
-        </div>
-      </CardFooter>
+            <div className="flex space-x-2 w-full">
+              <Button className="flex-1" size="sm" aria-label="Buy Now" title="Buy Now">
+                Buy Now
+              </Button>
+              <Button size="sm" variant="outline" aria-label="Add to Compare" title="Add to Compare">
+                <Plus className="w-3 h-3" />
+              </Button>
+            </div>
+          </CardFooter>
     </Card>
   )
 }
