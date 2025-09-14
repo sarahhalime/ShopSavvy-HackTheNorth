@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge"
 import { CheckCircle, Copy, ExternalLink } from "lucide-react"
 import Link from "next/link"
+import { EthAnimation, ethAnimationManager } from "@/components/eth-animation"
 
 export default function CheckoutSuccessPage() {
   const searchParams = useSearchParams()
@@ -24,13 +25,42 @@ export default function CheckoutSuccessPage() {
 
   useEffect(() => {
     // Simulate order confirmation
-    const timer = setTimeout(() => {
+    const timer = setTimeout(async () => {
       setOrderConfirmed(true)
+      const totalUSD = getTotalPrice() / 100
+      
+      // Try to process ETH reward
+      try {
+        const response = await fetch("/api/eth-rewards/process", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            buyerAddress: "0x742d35Cc6532C02bAc9F64f3d3f7BC0a97Fd8c3E", // Mock address
+            purchaseAmountUSD: totalUSD,
+            orderId: reference || "demo-order"
+          })
+        })
+        
+        const rewardResult = await response.json()
+        
+        if (rewardResult.success && rewardResult.triggerAnimation) {
+          // Trigger special reward animation
+          ethAnimationManager.triggerGlobalAnimation()
+        } else {
+          // Regular celebration animation
+          ethAnimationManager.triggerGlobalAnimation()
+        }
+      } catch (error) {
+        console.error("ETH reward error:", error)
+        // Still trigger regular animation
+        ethAnimationManager.triggerGlobalAnimation()
+      }
+      
       clearCart()
     }, 2000)
 
     return () => clearTimeout(timer)
-  }, [clearCart])
+  }, [clearCart, reference, getTotalPrice])
 
   const totalPrice = getTotalPrice()
   const mockTransactionSignature =

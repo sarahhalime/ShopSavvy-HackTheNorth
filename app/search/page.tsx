@@ -12,6 +12,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { Filter } from "lucide-react"
 import { mockProducts } from "@/lib/mock-data"
 import { isMockMode } from "@/lib/env"
+import { ethAnimationManager } from "@/components/eth-animation"
 
 interface Product {
   id: string
@@ -157,6 +158,13 @@ export default function SearchPage() {
               <h1 className="text-2xl font-bold">ShopSavvy</h1>
               <Badge variant="secondary">Search</Badge>
             </div>
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => ethAnimationManager.triggerGlobalAnimation()}
+            >
+              🔥 Trigger ETH
+            </Button>
             <Button variant="outline" size="sm">
               Sign In
             </Button>

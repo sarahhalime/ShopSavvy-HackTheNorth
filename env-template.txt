@@ -13,3 +13,18 @@ OPENAI_API_KEY=your_openai_api_key_here
 
 # Optional: MCP Server Configuration
 MCP_PORT=3001
+
+# ETH Reward Contract Configuration
+NEXT_PUBLIC_ETH_REWARD_CONTRACT=your_deployed_contract_address_here
+NEXT_PUBLIC_ETHEREUM_RPC_URL=https://eth-sepolia.g.alchemy.com/v2/your-api-key
+SEPOLIA_RPC_URL=https://eth-sepolia.g.alchemy.com/v2/your-api-key
+PRIVATE_KEY=your_deployment_private_key_here
+CHAINLINK_SUBSCRIPTION_ID=your_chainlink_vrf_subscription_id
+ETHERSCAN_API_KEY=your_etherscan_api_key
+
+# Solana Configuration
+SOLANA_RPC_URL=https://api.devnet.solana.com
+SOLANA_MERCHANT_WALLET=your_merchant_wallet_here
+
+# Ethereum Configuration
+ETH_MERCHANT_WALLET=your_eth_merchant_wallet_here

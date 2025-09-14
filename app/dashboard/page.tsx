@@ -31,6 +31,7 @@ import {
 } from "lucide-react"
 import { mockOrders } from "@/lib/mock-data"
 import { AIInsightsWidget } from "@/components/ai-insights-widget"
+import { EthRewardsWidget } from "@/components/eth-rewards-widget"
 
 export default function DashboardPage() {
   const [activeTab, setActiveTab] = useState("history")
@@ -218,7 +219,10 @@ export default function DashboardPage() {
 
             {activeTab === "insights" && (
               <div className="space-y-6">
-                <AIInsightsWidget />
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <AIInsightsWidget />
+                  <EthRewardsWidget />
+                </div>
               </div>
             )}
 

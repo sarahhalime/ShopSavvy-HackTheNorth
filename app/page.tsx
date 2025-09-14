@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
+import { EthAnimation, useGlobalEthAnimation, ethAnimationManager } from "@/components/eth-animation"
 
 interface Product {
   name: string
@@ -27,6 +28,7 @@ export default function HomePage() {
   const [displayedProducts, setDisplayedProducts] = useState<Product[]>([])
   const [displayCount, setDisplayCount] = useState(3)
   const [hasSearched, setHasSearched] = useState(false)
+  const globalEthTrigger = useGlobalEthAnimation()
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -78,31 +80,37 @@ export default function HomePage() {
   const ProductCard = ({ product, index }: { product: Product; index: number }) => (
     <Card className="group hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
       <CardContent className="p-0">
-        <div className="aspect-square relative overflow-hidden rounded-t-lg bg-muted">
-          {product.image ? (
-            <img
-              src={product.image}
-              alt={product.name}
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-              onError={(e) => {
-                const target = e.target as HTMLImageElement
-                target.style.display = 'none'
-                const placeholder = target.nextElementSibling as HTMLElement
-                if (placeholder) placeholder.style.display = 'flex'
-              }}
-            />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-muted to-muted/50">
-              <ShoppingBag className="w-16 h-16 text-muted-foreground/50" />
+        <EthAnimation 
+          trigger={globalEthTrigger}
+          announcementText="ETH Shopping Event!"
+          size="md"
+        >
+          <div className="aspect-square relative overflow-hidden rounded-t-lg bg-muted">
+            {product.image ? (
+              <img
+                src={product.image}
+                alt={product.name}
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement
+                  target.style.display = 'none'
+                  const placeholder = target.nextElementSibling as HTMLElement
+                  if (placeholder) placeholder.style.display = 'flex'
+                }}
+              />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-muted to-muted/50">
+                <ShoppingBag className="w-16 h-16 text-muted-foreground/50" />
+              </div>
+            )}
+            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300 flex items-center justify-center opacity-0 group-hover:opacity-100">
+              <Eye className="w-8 h-8 text-white" />
             </div>
-          )}
-          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300 flex items-center justify-center opacity-0 group-hover:opacity-100">
-            <Eye className="w-8 h-8 text-white" />
+            <Badge className="absolute top-3 left-3 bg-background/90 text-foreground border">
+              #{index + 1}
+            </Badge>
           </div>
-          <Badge className="absolute top-3 left-3 bg-background/90 text-foreground border">
-            #{index + 1}
-          </Badge>
-        </div>
+        </EthAnimation>
         <div className="p-4">
           <h3 className="font-semibold text-sm mb-2 line-clamp-2 group-hover:text-primary transition-colors">
             {product.name}
@@ -142,6 +150,16 @@ export default function HomePage() {
             <a href="/history" className="text-muted-foreground hover:text-foreground transition-colors">
               History
             </a>
+            <a href="/eth-demo" className="text-muted-foreground hover:text-foreground transition-colors">
+              ETH Demo
+            </a>
+            <Button 
+              size="sm" 
+              variant="outline"
+              onClick={() => ethAnimationManager.triggerGlobalAnimation()}
+            >
+              🔥 Trigger ETH
+            </Button>
             <Button size="sm">Sign In</Button>
           </nav>
         </div>

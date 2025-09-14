@@ -1,0 +1,19 @@
+{
+  "name": "eth-reward-contracts",
+  "version": "1.0.0",
+  "description": "ETH reward smart contracts with Chainlink VRF",
+  "scripts": {
+    "compile": "hardhat compile",
+    "deploy": "hardhat run scripts/deploy.js --network sepolia",
+    "test": "hardhat test"
+  },
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^4.0.0",
+    "hardhat": "^2.19.0"
+  },
+  "dependencies": {
+    "@chainlink/contracts": "^0.8.0",
+    "@openzeppelin/contracts": "^5.0.0",
+    "dotenv": "^17.2.2"
+  }
+}
