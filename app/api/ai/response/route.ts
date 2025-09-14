@@ -14,7 +14,19 @@ export async function POST(req: Request) {
     if (!content) {
       return NextResponse.json({
         response:
-          "Please share a bit about your situation or a financial question, and I’ll help you with clear next steps.",
+          "Hi! Tell me one thing you want help with — budgeting, saving, or spending habits?",
+        model: "none",
+        fallback: true,
+      })
+    }
+
+    // Heuristic: if the user just greets or writes something very short, keep it super concise
+    const textLC = content.toLowerCase().trim()
+    const isGreeting = /^(hi|hello|hey|yo|hiya|sup|what's up|whats up)[!\.\s]*$/i.test(textLC)
+    const isVeryShort = !isGreeting && textLC.split(/\s+/).filter(Boolean).length <= 3 && textLC.length <= 20
+    if (isGreeting) {
+      return NextResponse.json({
+        response: "Hey! How can I help — budgeting, saving, or spending habits?",
         model: "none",
         fallback: true,
       })
@@ -22,12 +34,10 @@ export async function POST(req: Request) {
 
     const apiKey = process.env.GEMINI_API_KEY
     if (!apiKey) {
-      return NextResponse.json({
-        response:
-          "I’m here for you. Try this: 1) List essentials. 2) Cap discretionary spend today. 3) Set one small goal (e.g., save $10). Share more and I’ll personalize the plan.",
-        model: "fallback",
-        fallback: true,
-      })
+      const fallbackShort = isVeryShort
+        ? "Got it. What’s the goal — budget, saving, or cutting spend this week?"
+        : "Quick win: note top 3 expenses, set a daily limit, and try the 50/30/20 split. Share income/goals for a tailored plan."
+      return NextResponse.json({ response: fallbackShort, model: "fallback", fallback: true })
     }
 
     const { GoogleGenerativeAI } = await import("@google/generative-ai")
@@ -35,7 +45,7 @@ export async function POST(req: Request) {
     const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" })
 
     const system =
-      "You are a concise, empathetic financial guide for consumers. Provide actionable, practical steps tailored to the user's situation. Keep responses under 180 words; use bullets when helpful."
+      "You are a concise, empathetic financial guide for consumers. Provide actionable, practical steps tailored to the user's situation. Keep responses under 120 words. If the user's message is a greeting or very short, reply in ONE friendly sentence plus ONE short follow-up question; do not use lists or long paragraphs in that case."
     const prompt = `Mood: ${mood}.\nUser: ${content}\nAdvisor:`
 
     const result = await model.generateContent([system, prompt])
